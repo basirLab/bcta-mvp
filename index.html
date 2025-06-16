@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head><title>BCTA MVP</title></head>
+<body>
+  <h1>OpenAI API Test</h1>
+  <textarea id="prompt" rows="5" cols="50" placeholder=" ?"></textarea><br>
+  <button onclick="sendToOpenAI()"></button>
+  <pre id="response"></pre>
+
+  <script>
+    async function sendToOpenAI() {
+      const prompt = document.getElementById("prompt").value;
+      const responseDiv = document.getElementById("response");
+
+      const res = await fetch('/api/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      responseDiv.textContent = data.result || ' ';
+    }
+  </script>
+</body>
+</html>
