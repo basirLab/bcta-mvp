@@ -66,5 +66,187 @@
         "4": "Actively identifies weaknesses or flaws in reasoning and explains how they were considered or addressed."
       }
     }
+  ],
+  "QT": [
+    {
+      "code": "QT1",
+      "name": "Framing the Question",
+      "kr_name": "초점 설정력",
+      "levels": {
+        "1": "The question is vague or unrelated to the topic.",
+        "2": "The question addresses the topic but lacks specificity or focus.",
+        "3": "The question defines the topic clearly and targets a core aspect.",
+        "4": "The question precisely frames the topic and captures both core and contextual elements."
+      }
+    },
+    {
+      "code": "QT2",
+      "name": "Causal Reasoning Trigger",
+      "kr_name": "인과 탐색 유도력",
+      "levels": {
+        "1": "The question does not suggest any relationship or cause-effect pattern.",
+        "2": "Suggests a loose relationship but lacks direction for causal analysis.",
+        "3": "Prompts reasonable cause-effect thinking with one variable or link.",
+        "4": "Effectively triggers multi-layered causal reasoning or comparative analysis."
+      }
+    },
+    {
+      "code": "QT3",
+      "name": "Perspective-Opening Questioning",
+      "kr_name": "관점 확장 유도력",
+      "levels": {
+        "1": "The question reflects only one viewpoint with no openness.",
+        "2": "Suggests an alternative view but lacks breadth or relevance.",
+        "3": "Invites multiple viewpoints or encourages cultural/personal perspectives.",
+        "4": "Actively provokes consideration of diverse perspectives with clear relevance."
+      }
+    },
+    {
+      "code": "QT4",
+      "name": "Promotes Further Inquiry",
+      "kr_name": "탐구 확장 유도력",
+      "levels": {
+        "1": "The question ends the discussion or leads to one-time answers.",
+        "2": "Allows limited extension but lacks intellectual depth.",
+        "3": "Encourages follow-up exploration or discussion.",
+        "4": "Naturally leads to deeper investigation, new questions, or interdisciplinary links."
+      }
+    },
+    {
+      "code": "QT5",
+      "name": "Promotes Reflective Thinking",
+      "kr_name": "성찰 유도력",
+      "levels": {
+        "1": "Does not prompt any reflection or self-examination.",
+        "2": "Raises a general reflective idea without personal relevance.",
+        "3": "Encourages self-assessment or consideration of assumptions.",
+        "4": "Deeply provokes introspection, ethical reflection, or examination of thinking patterns."
+      }
+    }
+  ],
+  "DT": [
+    {
+      "code": "DT1",
+      "name": "Listening & Paraphrasing",
+      "kr_name": "경청 및 요약력",
+      "levels": {
+        "1": "Misunderstands or ignores the partner’s statement; no paraphrasing.",
+        "2": "Shows partial understanding with inaccurate or incomplete restatement.",
+        "3": "Understands and restates the main idea in their own words with reasonable clarity.",
+        "4": "Accurately captures both explicit and implicit content and reformulates it with clarity and nuance."
+      }
+    },
+    {
+      "code": "DT2",
+      "name": "Empathic Engagement",
+      "kr_name": "공감 및 연결력",
+      "levels": {
+        "1": "Displays no recognition of the partner’s emotions or context.",
+        "2": "Acknowledges surface content but shows minimal empathy or relevance.",
+        "3": "Responds with moderate emotional and contextual alignment.",
+        "4": "Actively responds with strong empathy, recognizing emotions, intentions, and context to deepen connection."
+      }
+    },
+    {
+      "code": "DT3",
+      "name": "Social Regulation in Dialogue",
+      "kr_name": "반응조절력",
+      "levels": {
+        "1": "Interrupts or dominates the conversation; disregards conversational norms.",
+        "2": "Makes some effort to regulate tone or timing, but inconsistently.",
+        "3": "Adjusts speech speed, tone, and intensity appropriately in most interactions.",
+        "4": "Consistently regulates delivery with high sensitivity to partner’s cues and conversational flow."
+      }
+    },
+    {
+      "code": "DT4",
+      "name": "Co-Constructing Meaning",
+      "kr_name": "공동 의미구축력",
+      "levels": {
+        "1": "Makes isolated statements with no engagement in shared meaning-making.",
+        "2": "Shows occasional attempts at alignment or agreement but lacks structure.",
+        "3": "Collaboratively builds understanding with moderate use of inclusive language.",
+        "4": "Actively co-constructs meaning through collaborative reasoning, shared references, and inclusive phrasing."
+      }
+    },
+    {
+      "code": "DT5",
+      "name": "Clarifying and Responding",
+      "kr_name": "명확화 및 질문응답력",
+      "levels": {
+        "1": "Ignores unclear statements or changes the topic abruptly.",
+        "2": "Gives minimal clarification or asks vague follow-up questions.",
+        "3": "Asks or answers relevant questions to continue the dialogue meaningfully.",
+        "4": "Skillfully clarifies ambiguities, offers insightful questions, and builds dialogue depth with precision."
+      }
+    }
+  ],
+  "AT": [
+    {
+      "code": "AT1",
+      "name": "Clarity of Claim",
+      "kr_name": "주장 명확성",
+      "levels": {
+        "1": "Fails to state a position or presents a vague or contradictory claim.",
+        "2": "States a general position but lacks focus or clarity in the main point.",
+        "3": "Clearly states a specific claim with a discernible core message.",
+        "4": "Articulates a sharp, focused claim that defines the argument's direction and stakes."
+      }
+    },
+    {
+      "code": "AT2",
+      "name": "Evidence Validity",
+      "kr_name": "논거 타당성",
+      "levels": {
+        "1": "Offers no evidence or uses irrelevant or unreliable sources.",
+        "2": "Provides minimal or weak evidence, lacking evaluation or connection.",
+        "3": "Selects generally valid evidence with some analysis or relevance.",
+        "4": "Presents strong, credible evidence, well-organized and evaluated for relevance and reliability."
+      }
+    },
+    {
+      "code": "AT3",
+      "name": "Counter-Argument Handling",
+      "kr_name": "반박 전략성",
+      "levels": {
+        "1": "Ignores opposing views or misrepresents them.",
+        "2": "Acknowledges counterpoints without proper response or clarity.",
+        "3": "Addresses counterarguments with basic rebuttal or partial agreement.",
+        "4": "Skillfully engages with counterarguments through precise rebuttal, concession, or synthesis."
+      }
+    },
+    {
+      "code": "AT4",
+      "name": "Emotional Regulation in Argument",
+      "kr_name": "감정/공감 절제력",
+      "levels": {
+        "1": "Uses emotionally charged or disrespectful tone; argument loses coherence.",
+        "2": "Attempts to stay neutral but occasionally shifts tone or reacts emotionally.",
+        "3": "Maintains respectful tone and emotional control, though not always consistently.",
+        "4": "Demonstrates full emotional discipline and respectful tone while reinforcing argumentative strength."
+      }
+    },
+    {
+      "code": "AT5",
+      "name": "Conclusion Consistency",
+      "kr_name": "결론 일관성",
+      "levels": {
+        "1": "No conclusion or an abrupt one unrelated to the argument.",
+        "2": "Provides a conclusion, but it lacks alignment with preceding argumentation.",
+        "3": "Draws a conclusion that generally follows from the evidence and reasoning.",
+        "4": "Concludes with a persuasive, well-aligned ending that integrates all key arguments logically."
+      }
+    },
+    {
+      "code": "AT6",
+      "name": "Argument Presentation Quality",
+      "kr_name": "전달 표현력",
+      "levels": {
+        "1": "Disorganized or incoherent expression that hinders comprehension.",
+        "2": "Basic organization exists but lacks clarity, fluency, or logical flow.",
+        "3": "Reasonably clear structure with mostly logical flow and appropriate vocabulary.",
+        "4": "Delivers a well-structured, fluent, and persuasive presentation using precise and compelling language."
+      }
+    }
   ]
 }
