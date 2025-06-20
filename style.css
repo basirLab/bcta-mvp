@@ -68,3 +68,11 @@ h2 {
 #submitBtn:hover {
   background-color: #0056b3;
 }
+.tags {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+.tags span {
+  margin-right: 10px;
+}
