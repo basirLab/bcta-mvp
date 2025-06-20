@@ -1,0 +1,70 @@
+{
+  "CT": [
+    {
+      "code": "CT1",
+      "name": "Interpretation",
+      "kr_name": "해석력",
+      "levels": {
+        "1": "Misinterprets the question or responds off-topic, showing confusion or lack of clarity.",
+        "2": "Understands the surface meaning but misses key elements or misrepresents the core idea.",
+        "3": "Understands the key message and restates the question meaningfully with some contextual grasp.",
+        "4": "Clearly restates the prompt in original wording, capturing both core and implicit meanings, including assumptions and context."
+      }
+    },
+    {
+      "code": "CT2",
+      "name": "Analysis",
+      "kr_name": "분석력",
+      "levels": {
+        "1": "No clear structure; claims, evidence, and reasoning are mixed or absent.",
+        "2": "Distinguishes some elements (e.g., claim vs. evidence) but with weak or unclear connections.",
+        "3": "Separates key components and attempts to show their logical relationships.",
+        "4": "Breaks down information precisely into structured parts and maps out strong logical relationships between them."
+      }
+    },
+    {
+      "code": "CT3",
+      "name": "Evaluation",
+      "kr_name": "평가력",
+      "levels": {
+        "1": "No attempt to assess the quality or relevance of the information.",
+        "2": "Mentions evidence but lacks critical analysis or judgment of its credibility.",
+        "3": "Evaluates at least one piece of evidence with justified reasoning.",
+        "4": "Compares multiple pieces of evidence, judging credibility and relevance using clear evaluation criteria."
+      }
+    },
+    {
+      "code": "CT4",
+      "name": "Inference",
+      "kr_name": "추론력",
+      "levels": {
+        "1": "Conclusion is missing, invalid, or disconnected from the information.",
+        "2": "A conclusion is given but relies on assumptions or contains logical gaps.",
+        "3": "Draws a valid conclusion based on provided information.",
+        "4": "Constructs a logically sound conclusion from multiple sources, while addressing possible counterarguments."
+      }
+    },
+    {
+      "code": "CT5",
+      "name": "Explanation",
+      "kr_name": "설명력",
+      "levels": {
+        "1": "Disorganized, vague, or hard to follow; lacks coherence.",
+        "2": "Basic structure exists but lacks clarity or logical progression.",
+        "3": "Uses a clear structure (e.g., intro–body–conclusion) with mostly coherent explanation.",
+        "4": "Highly coherent and structured argument; communicates reasoning effectively for reader understanding."
+      }
+    },
+    {
+      "code": "CT6",
+      "name": "Self-Regulation",
+      "kr_name": "자기조절력",
+      "levels": {
+        "1": "Shows no reflection or awareness of possible errors.",
+        "2": "Acknowledges possible errors but without depth or clarity.",
+        "3": "Recognizes limitations and addresses them with brief reflection.",
+        "4": "Actively identifies weaknesses or flaws in reasoning and explains how they were considered or addressed."
+      }
+    }
+  ]
+}
