@@ -1,21 +1,76 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BCTA 평가 진행</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <title>BCTA 평가 페이지</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="chat-container" id="chat-container">
-    <!-- 질문과 답변이 여기에 하나씩 추가됨 -->
+  <div class="chat-box">
+    <h2>📝 BCTA 평가 진행</h2>
+    <div id="chatArea"></div>
+
+    <div id="inputBox">
+      <input type="text" id="userInput" placeholder="여기에 답변을 입력하세요">
+      <button id="submitBtn">제출</button>
+    </div>
   </div>
 
-  <div class="input-container">
-    <input type="text" id="answer-input" placeholder="여기에 답변을 입력하세요..."/>
-    <button id="submit-btn">제출</button>
-  </div>
+  <script>
+    const questions = JSON.parse(localStorage.getItem("bcta_questions") || "[]");
+    let current = 0;
+    const answers = [];
 
-  <script src="answer.js"></script>
+    const chatArea = document.getElementById("chatArea");
+    const userInput = document.getElementById("userInput");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function showQuestion(index) {
+      const q = questions[index];
+      if (!q) {
+        chatArea.innerHTML += `<div class="message"><div class="question">✅ 모든 질문에 답변하셨습니다. 감사합니다!</div></div>`;
+        document.getElementById("inputBox").style.display = "none";
+        console.log("🧠 최종 답변 결과:", answers);
+        return;
+      }
+      const questionHTML = `
+        <div class="message">
+          <div class="question">
+            <strong>질문 ${index + 1}</strong><br>
+            ${q.question}
+          </div>
+        </div>`;
+      chatArea.innerHTML += questionHTML;
+      userInput.value = "";
+      userInput.focus();
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    submitBtn.onclick = () => {
+      const answer = userInput.value.trim();
+      if (answer === "") return;
+
+      answers.push({
+        question: questions[current].question,
+        type: questions[current].type,
+        tags: questions[current].tags,
+        answer: answer
+      });
+
+      const answerHTML = `
+        <div class="message">
+          <div class="answer">
+            ${answer}
+          </div>
+        </div>`;
+      chatArea.innerHTML += answerHTML;
+      current++;
+      showQuestion(current);
+    };
+
+    window.onload = () => {
+      showQuestion(current);
+    };
+  </script>
 </body>
 </html>
