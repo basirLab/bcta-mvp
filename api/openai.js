@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       'OpenAI-Project': OPENAI_PROJECT_ID
     },
     body: JSON.stringify({
-      model: 'gpt-4',
+      model: 'gpt-4-turbo',
       messages: [{ role: 'user', content: prompt }]
     }),
   });
