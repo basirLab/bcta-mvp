@@ -1,121 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>BCTA 평가 페이지</title>
-  <link rel="stylesheet" href="style.css">
+  <title>BCTA 질문 응답</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .chat-box {
+      max-width: 700px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-bubble {
+      margin: 15px 0;
+      padding: 12px 16px;
+      border-radius: 10px;
+      line-height: 1.5;
+      font-size: 16px;
+      max-width: 80%;
+    }
+
+    .chat-bubble.question {
+      background-color: #e1f3ff;
+      text-align: left;
+    }
+
+    .chat-bubble.answer {
+      background-color: #fff3d4;
+      text-align: right;
+      margin-left: auto;
+    }
+
+    #inputBox {
+      display: flex;
+      margin-top: 20px;
+      gap: 10px;
+    }
+
+    #answer-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    #submit-btn {
+      padding: 10px 18px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #submit-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <div class="chat-box">
-    <h2>📝 BCTA 평가 진행</h2>
-    <div id="chatArea"></div>
-
-    <div id="inputBox">
-      <input type="text" id="userInput" placeholder="여기에 답변을 입력하세요">
-      <button id="submitBtn">제출</button>
-    </div>
+  <div class="chat-box" id="chat-container">
+    <h2>📝 질문에 답변해주세요</h2>
   </div>
 
-<script>
-const questions = JSON.parse(localStorage.getItem("bcta_questions") || "[]");
-let current = 0;
-const answers = [];
+  <div id="inputBox" class="chat-box">
+    <input type="text" id="answer-input" placeholder="여기에 답변을 입력하세요" />
+    <button id="submit-btn">제출</button>
+  </div>
 
-const chatArea = document.getElementById("chatArea");
-const userInput = document.getElementById("userInput");
-const submitBtn = document.getElementById("submitBtn");
+  <script>
+    const chatContainer = document.getElementById('chat-container');
+    const answerInput = document.getElementById('answer-input');
+    const submitBtn = document.getElementById('submit-btn');
 
-function showQuestion(index) {
-  const q = questions[index];
-  if (!q) {
-    chatArea.innerHTML += `<div class="message"><div class="question">✅ 모든 질문에 답변하셨습니다. GPT 평가를 진행합니다...</div></div>`;
-    document.getElementById("inputBox").style.display = "none";
-    evaluateWithGPT();  // 👉 평가 요청 함수 호출
-    return;
-  }
+    // 질문 리스트 (예시)
+    const questions = [
+      "1. 친구와 말다툼이 생겼을 때, 어떻게 대처하는 것이 좋을까?",
+      "2. 프로젝트 중 예상치 못한 일이 생기면 어떻게 해결할 수 있을까?",
+      "3. 누군가 내 의견에 강하게 반대할 때, 어떻게 대응할 수 있을까?"
+    ];
 
-  const tagHTML = `
-    <div class="tags">
-      <span><strong>주제:</strong> ${q.tags.주제}</span> |
-      <span><strong>사고기능:</strong> ${q.tags.사고기능}</span> |
-      <span><strong>정서:</strong> ${q.tags.정서}</span>
-    </div>`;
+    // 평가유형 (이전에 localStorage에 저장되어 있어야 함)
+    const evaluationType = localStorage.getItem("evaluationType") || "CT"; // fallback
 
-  const questionHTML = `
-    <div class="message">
-      <div class="question">
-        <strong>질문 ${index + 1}</strong><br>
-        ${q.question}
-        ${tagHTML}
-      </div>
-    </div>`;
+    let currentIndex = 0;
+    const userAnswers = [];
 
-  chatArea.innerHTML += questionHTML;
-  userInput.value = "";
-  userInput.focus();
-  chatArea.scrollTop = chatArea.scrollHeight;
-}
+    function showQuestion(index) {
+      const questionText = questions[index];
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble question';
+      bubble.innerText = questionText;
+      chatContainer.appendChild(bubble);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      answerInput.focus();
+    }
 
-submitBtn.onclick = () => {
-  const answer = userInput.value.trim();
-  if (answer === "") return;
+    function submitAnswer() {
+      const answer = answerInput.value.trim();
+      if (answer === '') {
+        alert('답변을 입력해주세요.');
+        return;
+      }
 
-  answers.push({
-    question: questions[current].question,
-    type: questions[current].type,
-    tags: questions[current].tags,
-    answer: answer
-  });
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble answer';
+      bubble.innerText = answer;
+      chatContainer.appendChild(bubble);
 
-  const answerHTML = `
-    <div class="message">
-      <div class="answer">${answer}</div>
-    </div>`;
-  chatArea.innerHTML += answerHTML;
-  current++;
-  showQuestion(current);
-};
+      userAnswers.push({
+        question: questions[currentIndex],
+        answer: answer
+      });
 
-window.onload = () => {
-  showQuestion(current);
-};
+      currentIndex++;
+      answerInput.value = '';
 
-// 👉 평가 요청 함수
-async function evaluateWithGPT() {
-  const prompt = `
-당신은 GPT 평가자입니다. 사용자의 질문-답변 목록과 각 항목의 태그(주제/사고기능/정서)를 기반으로 평가 기준에 따라 점수를 부여하십시오.
+      if (currentIndex < questions.length) {
+        setTimeout(() => {
+          showQuestion(currentIndex);
+        }, 500);
+      } else {
+        // 저장 및 페이지 이동
+        localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
+        localStorage.setItem('evaluationType', evaluationType);
+        window.location.href = 'result.html';
+      }
 
-각 항목에 대해 다음과 같은 구조로 JSON으로 응답하십시오:
-[
-  {
-    "질문": "질문 내용",
-    "답변": "사용자 답변",
-    "사고기능": "분석",  // 예시
-    "점수": 4.5,
-    "이유": "핵심 논리를 잘 설명하였음"
-  },
-  ...
-]
-질문-답변 목록:
-${answers.map((item, i) => `Q${i + 1}: ${item.question}\nA${i + 1}: ${item.answer}\n[사고기능: ${item.tags.사고기능}]`).join('\n\n')}
-`;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 
-  try {
-    const res = await fetch("/api/openai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
+    submitBtn.addEventListener('click', submitAnswer);
+    answerInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') submitAnswer();
     });
 
-    const data = await res.json();
-    localStorage.setItem("bcta_result", data.result);
-    window.location.href = "result.html";
-  } catch (err) {
-    alert("GPT 평가 요청에 실패했습니다.");
-    console.error(err);
-  }
-}
-</script>
+    // 시작 시 첫 질문 표시
+    showQuestion(currentIndex);
+  </script>
 </body>
 </html>
-ㄴ
