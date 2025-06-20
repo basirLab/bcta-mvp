@@ -1,51 +1,70 @@
 body {
-  font-family: sans-serif;
-  background: #f5f5f5;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f2f5;
   margin: 0;
   padding: 0;
 }
 
-.chat-container {
-  padding: 20px;
-  max-width: 600px;
-  margin: auto;
-  background: white;
-  height: 80vh;
-  overflow-y: scroll;
-  border: 1px solid #ddd;
+.chat-box {
+  max-width: 700px;
+  margin: 40px auto;
+  background-color: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.chat-bubble {
-  margin-bottom: 15px;
-  padding: 12px;
-  border-radius: 10px;
-  max-width: 80%;
+h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.message {
+  margin: 15px 0;
 }
 
 .question {
-  background: #e0e0e0;
-  align-self: flex-start;
+  background-color: #e1f3ff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .answer {
-  background: #d0f0c0;
-  align-self: flex-end;
+  background-color: #fff3d4;
+  padding: 12px 16px;
+  border-radius: 10px;
   text-align: right;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-.input-container {
-  max-width: 600px;
-  margin: 10px auto;
+#inputBox {
   display: flex;
+  margin-top: 20px;
+  gap: 10px;
 }
 
-#answer-input {
+#userInput {
   flex: 1;
   padding: 10px;
   font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
-#submit-btn {
-  padding: 10px 20px;
+#submitBtn {
+  padding: 10px 18px;
   font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#submitBtn:hover {
+  background-color: #0056b3;
 }
