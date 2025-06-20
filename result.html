@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>BCTA 평가 결과</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .spinner {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result-block {
+      margin-bottom: 40px;
+    }
+
+    .question {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .answer {
+      margin-bottom: 10px;
+    }
+
+    .score-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .score-table th, .score-table td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .score-table th {
+      background-color: #f9f9f9;
+    }
+
+    .feedback {
+      padding: 10px;
+      background-color: #fef7d1;
+      border-left: 4px solid #f1c40f;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🧠 평가 결과</h2>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      GPT 평가를 진행 중입니다. 잠시만 기다려주세요...
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    async function loadEvaluation() {
+      const answers = JSON.parse(localStorage.getItem("userAnswers") || "[]");
+      const evaluationType = localStorage.getItem("evaluationType") || "CT";
+
+      if (!answers.length) {
+        document.getElementById("loading").innerText = "답변이 없습니다.";
+        return;
+      }
+
+      const res = await fetch("/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers, evaluationType })
+      });
+
+      const data = await res.json();
+
+      try {
+        const resultData = JSON.parse(data.result);
+        renderResults(resultData);
+      } catch (e) {
+        document.getElementById("loading").innerText = "GPT 응답 형식을 인식할 수 없습니다.";
+        console.error("응답 파싱 실패:", e);
+      }
+    }
+
+    function renderResults(resultData) {
+      document.getElementById("loading").style.display = "none";
+
+      const resultsDiv = document.getElementById("results");
+
+      resultData.forEach((item, index) => {
+        const block = document.createElement("div");
+        block.className = "result-block";
+
+        block.innerHTML += `<div class="question">Q${index + 1}. ${item.question}</div>`;
+        block.innerHTML += `<div class="answer">🙋‍♂️ 내 답변: ${item.answer}</div>`;
+
+        const table = document.createElement("table");
+        table.className = "score-table";
+
+        const header = table.insertRow();
+        header.innerHTML = "<th>항목</th><th>점수</th><th>이유</th>";
+
+        for (let key in item.scores) {
+          const row = table.insertRow();
+          const reason = item.reasoning?.[key] || "-";
+          row.innerHTML = `<td>${key}</td><td>${item.scores[key]}</td><td>${reason}</td>`;
+        }
+
+        block.appendChild(table);
+
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        feedback.innerText = `📌 총평: ${item.feedback}`;
+        block.appendChild(feedback);
+
+        resultsDiv.appendChild(block);
+      });
+    }
+
+    window.onload = loadEvaluation;
+  </script>
+</body>
+</html>
