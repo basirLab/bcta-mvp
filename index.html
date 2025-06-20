@@ -1,25 +1,63 @@
 <!DOCTYPE html>
 <html>
-<head><title>BCTA MVP</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>BCTA MVP 질문 생성기</title>
+</head>
 <body>
-  <h1>OpenAI API Test</h1>
-  <textarea id="prompt" rows="5" cols="50" placeholder=" ?"></textarea><br>
-  <button onclick="sendToOpenAI()"></button>
-  <pre id="response"></pre>
+  <h1>🧠 BCTA 질문 생성기</h1>
+
+  <label for="target">대상 선택:</label>
+  <select id="target">
+    <option>초등학생</option>
+    <option>중학생</option>
+    <option>고등학생</option>
+    <option>대학생</option>
+    <option>직장인</option>
+  </select>
+
+  <button onclick="generateQuestions()">질문 생성하기</button>
+
+  <h2>📋 생성된 질문</h2>
+  <div id="questionsOutput" style="white-space:pre-wrap; font-family:monospace;"></div>
 
   <script>
-    async function sendToOpenAI() {
-      const prompt = document.getElementById("prompt").value;
-      const responseDiv = document.getElementById("response");
+    async function generateQuestions() {
+      const target = document.getElementById("target").value;
+      const prompt = `당신은 교육 전문가이자 인지심리 기반 평가 설계 AI입니다.
+
+다음 조건에 따라 비판적 사고력(Critical Thinking, CT)을 평가하기 위한 질문을 생성하고, 질문마다 자동으로 사고기능, 주제, 정서를 각각 태깅하세요.
+
+대상: ${target}
+질문유형 및 개수:
+- CT-q1 판단형: 1개
+- CT-q2 인과분석형: 2개
+- CT-q3 비교대조형: 1개
+- CT-q4 추론확장형: 2개
+- CT-q5 사례적용형: 1개
+- CT-q6 자기조절형: 2개
+
+출력 형식(JSON):
+[
+  {
+    "question": "질문 내용",
+    "type": "CT-q1",
+    "tags": {
+      "주제": "기술",
+      "사고기능": "판단",
+      "정서": "비판"
+    }
+  }
+]`;
 
       const res = await fetch('/api/openai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ prompt })
       });
 
       const data = await res.json();
-      responseDiv.textContent = data.result || ' ';
+      document.getElementById("questionsOutput").textContent = data.result || '응답 없음';
     }
   </script>
 </body>

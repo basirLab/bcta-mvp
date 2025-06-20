@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
   const { prompt } = req.body;
+
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
 
