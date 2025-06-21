@@ -16,34 +16,17 @@
     <option>직장인</option>
   </select><br><br>
 
-<!--  <label for="evaluation">평가유형 선택:</label>
-  <select id="evaluation">
-    <option value="CT">CT - 비판적 사고</option>
-    <option value="AT">AT - 논증적 사고</option>
-    <option value="QT">QT - 질문 생성</option>
-    <option value="DT">DT - 대화 기반</option>
-  </select><br><br> -->
-  
-<script>
-  // 시작 버튼 클릭 시 기존 질문 삭제
-Object.keys(localStorage).forEach(k => {
-  if (k.startsWith("question_")) {
-    localStorage.removeItem(k);
-  }
-});
-  </script>
-  
+  <!-- 평가유형은 고정으로 하드코딩되어 있음 -->
   <button onclick="startTest()">시작하기</button>
 
 <script>
   async function startTest() {
     const target = document.getElementById("target").value;
-    //const evaluation = document.getElementById("evaluation").value;
-    const evaluation = "CT";  // 하드코딩: 평가유형을 고정
+    const evaluation = "CT";  // 하드코딩
 
-    // ✅ 기존 질문 및 답변 초기화
+    // 기존 질문, 답변, 인덱스 초기화
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("question_") || key.startsWith("answer_") || key === "currentIndex") {
+      if (key.startsWith("question_") || key.startsWith("answer_") || key.startsWith("tags_") || key === "currentIndex") {
         localStorage.removeItem(key);
       }
     });
@@ -51,26 +34,27 @@ Object.keys(localStorage).forEach(k => {
     localStorage.setItem("target", target);
     localStorage.setItem("evaluationType", evaluation);
 
-    // ✅ 질문 생성 요청
-    const res = await fetch('/api/generate-question', {
+    // 질문 생성 API 호출
+    const res = await fetch('/api/generate-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ target, evaluation })
     });
 
     const data = await res.json();
-if (!data || !data.question || data.question.length === 0) {
-  alert("질문 생성 실패. 다시 시도해주세요.");
-  return;
-}
+    if (!data || !data.question || data.question.length === 0) {
+      alert("❌ 질문 생성 실패. 다시 시도해주세요.");
+      return;
+    }
 
-data.question.forEach((q, idx) => {
-  localStorage.setItem(`question_${idx + 1}`, JSON.stringify([q]));
-});
+    // 질문 및 태그 저장
+    data.question.forEach((q, idx) => {
+      const i = idx + 1;
+      localStorage.setItem(`question_${i}`, q.question);
+      localStorage.setItem(`tags_${i}`, JSON.stringify(q.tags));
+    });
 
     localStorage.setItem("currentIndex", 1); // 처음부터 시작
-
-    // ✅ 평가 페이지로 이동
     window.location.href = "answer.html";
   }
 </script>
