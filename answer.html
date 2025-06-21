@@ -29,9 +29,10 @@
 <body>
   <h1>✏️ 질문에 답해주세요</h1>
 
-  <div class="question-box">
-    <p id="questionText">질문을 불러오는 중입니다...</p>
-  </div>
+<div class="question-box">
+  <p id="questionText">질문을 불러오는 중입니다...</p>
+  <p id="tagInfo" style="font-size: 0.9rem; color: gray;"></p> <!-- 태그 정보 -->
+</div>
 
   <textarea id="answerInput" placeholder="여기에 답변을 입력하세요..."></textarea>
   <br />
@@ -41,22 +42,28 @@
     let questionIndex = 1;
     let currentQuestion;
 
-    window.onload = function () {
-      const stored = localStorage.getItem(`question_${questionIndex}`);
-      if (!stored) {
-        document.getElementById("questionText").textContent = "❌ 질문을 불러올 수 없습니다.";
-        return;
-      }
+window.onload = function () {
+  const stored = localStorage.getItem(`question_${questionIndex}`);
+  if (!stored) {
+    document.getElementById("questionText").textContent = "❌ 질문을 불러올 수 없습니다.";
+    return;
+  }
 
-      try {
-        const parsed = JSON.parse(stored);
-        currentQuestion = parsed[0]; // 배열에서 첫 질문 꺼냄
-        document.getElementById("questionText").textContent = currentQuestion.question;
-      } catch (e) {
-        document.getElementById("questionText").textContent = "📛 JSON 파싱 오류";
-      }
-    };
+  try {
+    const parsed = JSON.parse(stored);
+    currentQuestion = parsed[0];
 
+    document.getElementById("questionText").textContent = currentQuestion.question;
+
+    // ✅ 태그 출력 추가
+    const tags = currentQuestion.tags || {};
+    const tagInfo = `🧠 사고기능: ${tags["사고기능"] || "없음"} | 📚 주제: ${tags["주제"] || "없음"} | 💬 정서: ${tags["정서"] || "없음"}`;
+    document.getElementById("tagInfo").textContent = tagInfo;
+
+  } catch (e) {
+    document.getElementById("questionText").textContent = "📛 JSON 파싱 오류";
+  }
+};
     async function submitAnswer() {
       const answer = document.getElementById("answerInput").value.trim();
       if (!answer) {
