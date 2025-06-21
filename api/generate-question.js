@@ -89,3 +89,16 @@ ${questionSet[evaluation]}
     return res.status(500).json({ error: 'GPT 호출 예외', message: error.message });
   }
 }
+return res.status(200).json({
+  question: [
+    {
+      question: "당신이 최근에 겪은 갈등 상황을 설명해보세요.",
+      type: "DT-q3",
+      tags: {
+        사고기능: "갈등조정",
+        주제: "학교생활",
+        정서: "중립"
+      }
+    }
+  ]
+});
