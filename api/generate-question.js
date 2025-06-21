@@ -1,3 +1,8 @@
+const completion = await openai.chat.completions.create({
+  model: "gpt-4", // 또는 "gpt-4-turbo" / "gpt-3.5-turbo"
+  messages: [{ role: "user", content: prompt }],
+});
+
 export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
@@ -102,3 +107,13 @@ return res.status(200).json({
     }
   ]
 });
+try {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4-turbo",
+    messages: [{ role: "user", content: prompt }],
+  });
+  return NextResponse.json({ result: completion.choices[0].message.content });
+} catch (error) {
+  console.error("GPT 호출 에러:", error); // 👈 콘솔에서 확인 가능
+  return NextResponse.json({ error: "OpenAI 호출 실패", detail: error.message });
+}
