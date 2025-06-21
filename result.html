@@ -5,28 +5,33 @@
   <title>BCTA 평가 결과</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6fa;
       margin: 0;
       padding: 20px;
     }
+
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     }
+
     h2 {
       text-align: center;
+      color: #2c3e50;
       margin-bottom: 30px;
     }
+
     .loading {
       text-align: center;
       font-size: 18px;
       color: #666;
     }
+
     .spinner {
       margin: 20px auto;
       border: 6px solid #f3f3f3;
@@ -36,37 +41,81 @@
       height: 40px;
       animation: spin 1s linear infinite;
     }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .result-block {
       margin-bottom: 40px;
+      border-left: 6px solid #4caf50;
+      padding-left: 20px;
+      background-color: #fdfdfd;
+      border-radius: 8px;
+      padding-top: 15px;
+      padding-bottom: 15px;
     }
+
     .score-table {
       border-collapse: collapse;
       width: 100%;
+      margin-top: 10px;
       margin-bottom: 10px;
     }
+
     .score-table th, .score-table td {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       padding: 8px 12px;
       text-align: left;
     }
+
     .score-table th {
-      background-color: #f9f9f9;
+      background-color: #f8f8f8;
     }
+
     .feedback {
-      padding: 10px;
-      background-color: #fef7d1;
-      border-left: 4px solid #f1c40f;
+      margin-top: 10px;
+      padding: 12px 15px;
+      background-color: #fff7d6;
+      border-left: 5px solid #f39c12;
       font-style: italic;
+      color: #333;
+    }
+
+    .summary-block {
+      background-color: #e8f4fd;
+      padding: 20px;
+      border-left: 6px solid #3498db;
+      border-radius: 10px;
+      margin-top: 40px;
+    }
+
+    .total-block {
+      margin-bottom: 30px;
+      padding: 12px;
+      background-color: #ecf0f1;
+      border-left: 5px solid #95a5a6;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🧠 평가 결과</h2>
+    <h2>🧠 BCTA 평가 결과</h2>
+
     <div id="loading" class="loading">
       <div class="spinner"></div>
       GPT 평가를 진행 중입니다. 잠시만 기다려주세요...
     </div>
+
     <div id="results"></div>
   </div>
 
@@ -75,13 +124,14 @@
       const answers = [];
       let totalScore = 0;
       let totalMax = 0;
-
       let index = 1;
+
       while (true) {
         const q = localStorage.getItem(`question_${index}`);
         const a = localStorage.getItem(`answer_${index}`);
         const s = localStorage.getItem(`score_${index}`);
         const f = localStorage.getItem(`feedback_${index}`);
+
         if (!q || !a || !s) break;
 
         const question = JSON.parse(q)[0].question;
@@ -118,6 +168,7 @@
       const summary = summaryData.result || "";
 
       const summaryBlock = document.createElement("div");
+      summaryBlock.className = "summary-block";
       summaryBlock.innerHTML = `<h3>📘 총평</h3><p>${summary}</p>`;
       document.getElementById("results").appendChild(summaryBlock);
     }
@@ -127,7 +178,8 @@
       const resultsDiv = document.getElementById("results");
 
       const totalBlock = document.createElement("div");
-      totalBlock.innerHTML = `<h3>총점: ${totalScore} / ${totalMax}</h3>`;
+      totalBlock.className = "total-block";
+      totalBlock.textContent = `총점: ${totalScore} / ${totalMax}`;
       resultsDiv.appendChild(totalBlock);
 
       resultData.forEach((item, index) => {
