@@ -52,5 +52,5 @@ ${questionSet[evaluation]}
 
   const result = json.choices?.[0]?.message?.content || '';
 
-  res.status(200).json({ result });
+  res.status(200).json({ question: JSON.parse(result) });
 }
