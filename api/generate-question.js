@@ -23,8 +23,7 @@ export default async function handler(req, res) {
       "주제": "환경",
       "정서": "중립"
     }
-  },
-  ...
+  }
 ]
 
 [질문 조건]
@@ -53,14 +52,23 @@ ${questionSet[evaluation]}
       body: JSON.stringify({
         model: "gpt-4-turbo",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.7
+        temperature: 1.0
       })
     });
 
     const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content || "[]";
 
-    const result = data.choices?.[0]?.message?.content || "질문 생성 실패";
-    res.status(200).json({ result });
+    let parsed = [];
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.error("OpenAI 응답 JSON 파싱 오류:", e);
+      return res.status(200).json({ question: [] });
+    }
+
+    res.status(200).json({ question: parsed });
+
   } catch (error) {
     console.error("질문 생성 오류:", error);
     res.status(500).json({ error: "질문 생성 중 오류 발생" });
