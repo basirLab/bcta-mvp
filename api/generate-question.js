@@ -86,3 +86,20 @@ ${questionSet[evaluation]}
     return res.status(500).json({ error: "GPT 호출 예외", message: error.message });
   }
 }
+
+let parsed;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (e) {
+      console.error("📛 JSON 파싱 오류:", e.message);
+      return res.status(500).json({ error: "JSON 파싱 실패", result });
+    }
+
+    // ✅ 페이지 정보 추가 (예: "1/7", "2/7", ...)
+    const total = parsed.length;
+    const withPageInfo = parsed.map((item, index) => ({
+      ...item,
+      pageInfo: `${index + 1} / ${total}`
+    }));
+
+    return res.status(200).json({ question: withPageInfo });
