@@ -22,8 +22,7 @@ ${evaluation} (예: CT1, CT2, CT3, CT4, CT5, CT6)
 -- 출력 형식 (JSON) --
 {
   "CT1": { "score": 3, "feedback": "의도는 명확했으나 문맥 해석이 부족했습니다." },
-  "CT2": { "score": 4, "feedback": "핵심 요소는 잘 분석했지만, 일부 항목은 연결이 부족합니다." },
-  ...
+  "CT2": { "score": 4, "feedback": "핵심 요소는 잘 분석했지만, 일부 항목은 연결이 부족합니다." }
 }
 `;
 
@@ -43,18 +42,30 @@ ${evaluation} (예: CT1, CT2, CT3, CT4, CT5, CT6)
     });
 
     const result = await apiRes.json();
-    const text = result.choices[0].message.content;
+    const raw = result?.choices?.[0]?.message?.content || "";
 
-    // JSON 파싱 시도
+    // ```json 제거 및 정제
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+
     let json;
     try {
-      json = JSON.parse(text);
+      json = JSON.parse(cleaned);
     } catch (e) {
-      return res.status(500).json({ error: "JSON 파싱 실패", raw: text });
+      console.error("❌ JSON 파싱 실패:", e.message);
+      return res.status(500).json({ error: "JSON 파싱 실패", raw });
+    }
+
+    // 필수 항목 검증 (예: CT1 ~ CT6 중 하나라도 존재해야 함)
+    const keys = Object.keys(json || {});
+    const isValid = keys.some(key => /^CT\d+/.test(key) && typeof json[key]?.score === "number");
+
+    if (!isValid) {
+      return res.status(500).json({ error: "유효하지 않은 점수 구조", raw: json });
     }
 
     return res.status(200).json({ scores: json });
   } catch (err) {
+    console.error("❌ GPT 호출 실패:", err.message);
     return res.status(500).json({ error: "GPT 평가 실패", detail: err.message });
   }
 }
