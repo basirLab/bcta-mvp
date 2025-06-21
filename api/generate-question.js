@@ -1,92 +1,89 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>BCTA 질문 답변</title>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      margin: 40px;
+export default async function handler(req, res) {More actions
+  const { evaluation, target } = req.body;
+
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
+
+  const questionSet = {
+    CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
+    AT: `- AT-q1 주장 생성형: 2개\n- AT-q2 논거 정당화형: 2개\n- AT-q3 반박 설계형: 1개\n- AT-q4 입장 전환형: 1개\n- AT-q5 감정 절제형: 1개\n- AT-q6 일관성 검토형: 2개`,
+    QT: `- QT-q1 사실 질문형: 2개\n- QT-q2 예측 질문형: 2개\n- QT-q3 대안 탐색형: 2개\n- QT-q4 가정 기반 질문형: 2개\n- QT-q5 창의적 확장 질문형: 2개`
+  };
+
+  const prompt = `
+다음은 "${target}"이라는 주제에 대해 ${evaluation} 유형의 질문을 생성하는 요청입니다.
+다음 규칙에 따라 JSON 형식의 질문들을 생성해 주세요:
+
+[출력 형식 예시]
+[
+  {
+    "question": "당신은 왜 그 선택을 했나요?",
+    "tags": {
+      "사고기능": "CT-q1 판단형",
+      "주제": "환경",
+      "정서": "중립"
     }
-    textarea {
-      width: 100%;
-      height: 120px;
-      font-size: 1rem;
-      padding: 10px;
+  }
+]
+
+[질문 조건]
+- 총 9문제 이상
+- 각 문제는 하나의 사고기능 유형(CT, AT, QT 등)에만 속해야 함
+- JSON 배열 형태로 출력
+- 질문은 한국어로 작성
+- 질문 내용은 대상 학습자의 나이(예: 초등학생, 중학생 등)에 맞게 쉽게 표현
+
+[질문 세트 유형 설명]
+${questionSet[evaluation]}
+
+---
+
+이제 위 조건을 바탕으로 "${target}"에 대한 질문을 생성해 주세요.
+`;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+        "OpenAI-Project": OPENAI_PROJECT_ID
+      },
+      body: JSON.stringify({
+        model: "gpt-4-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 1.0
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content || "[]";
+
+    let parsed = [];
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.error("OpenAI 응답 JSON 파싱 오류:", e);
+      return res.status(200).json({ question: [] });
     }
-    button {
-      margin-top: 20px;
-      padding: 8px 16px;
-      font-size: 1rem;
-    }
-    .question-box {
-      border-left: 4px solid #4caf50;
-      padding-left: 16px;
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h1>✏️ 질문에 답해주세요</h1>
+let raw = data.choices?.[0]?.message?.content || "[]";
 
-  <div class="question-box">
-    <p id="questionText">질문을 불러오는 중입니다...</p>
-    <p id="tagInfo" style="font-size: 0.9rem; color: gray;"></p>
-  </div>
+// 코드 블록 제거 (```json ... ```)
+raw = raw.replace(/```json|```/g, '').trim();
 
-  <textarea id="answerInput" placeholder="여기에 답변을 작성하세요..."></textarea>
-  <br>
-  <button onclick="submitAnswer()">제출하기</button>
+let parsed = [];
+try {
+  parsed = JSON.parse(raw);
+} catch (e) {
+  console.error("OpenAI 응답 JSON 파싱 오류:", e, "\n원본문자:", raw);
+  return res.status(200).json({ question: [] });
+}
 
-  <script>
-    // 질문 정보 불러오기
-    const questionId = localStorage.getItem("currentQuestionId");
-    const questionData = JSON.parse(localStorage.getItem(`question-${questionId}`));
-    document.getElementById("questionText").textContent = questionData.question;
-    document.getElementById("tagInfo").textContent = `태그: ${questionData.tag}`;
+    res.status(200).json({ question: parsed });
+res.status(200).json({ question: parsed });
 
-    async function submitAnswer() {
-      const answer = document.getElementById("answerInput").value;
-      if (!answer) {
-        alert("답변을 입력해주세요.");
-        return;
-      }
-
-      const payload = {
-        evaluation: questionData.tag,
-        question: questionData.question,
-        answer: answer
-      };
-
-      try {
-        const response = await fetch("/api/evaluate-answer", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          alert("GPT 평가 실패: " + result.error || result.detail);
-          console.error(result.raw || result.detail);
-          return;
-        }
-
-        // 결과 로컬스토리지에 저장
-        localStorage.setItem(`result-${questionId}`, JSON.stringify(result.scores));
-
-        // 완료 알림 및 리디렉션
-        alert("답변이 제출되었습니다. 결과를 확인하세요.");
-        window.location.href = "result.html";
-
-      } catch (err) {
-        console.error("요청 실패:", err);
-        alert("서버 요청 중 오류가 발생했습니다.");
-      }
-    }
-  </script>
-</body>
-</html>
+  } catch (error) {
+    console.error("질문 생성 오류:", error);
+    res.status(500).json({ error: "질문 생성 중 오류 발생" });
+  }
+}
