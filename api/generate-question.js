@@ -1,13 +1,8 @@
-const completion = await openai.chat.completions.create({
-  model: "gpt-4", // 또는 "gpt-4-turbo" / "gpt-3.5-turbo"
-  messages: [{ role: "user", content: prompt }],
-});
-
 export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  //const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
+  const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
 
   const questionSet = {
     CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
@@ -42,41 +37,38 @@ ${questionSet[evaluation]}
 `;
 
   try {
-    // 🔒 타임아웃 설정 (15초)
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 15000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const apiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
-        'OpenAI-Project': OPENAI_PROJECT_ID
+        'OpenAI-Project': OPENAI_PROJECT_ID, // 주석 풀었는지 확인!
       },
       body: JSON.stringify({
         model: 'gpt-4-turbo',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3
+        temperature: 0.3,
       }),
       signal: controller.signal
     });
 
     clearTimeout(timeout);
 
-    if (!apiRes.ok) {
-      const errText = await apiRes.text();
-      console.error("❌ GPT 응답 에러:", apiRes.status, errText);
-      return res.status(500).json({ error: 'OpenAI 응답 실패', status: apiRes.status, message: errText });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ OpenAI 응답 실패:", response.status, errorText);
+      return res.status(500).json({ error: "OpenAI 응답 실패", message: errorText });
     }
 
-    const json = await apiRes.json();
+    const json = await response.json();
     const result = json.choices?.[0]?.message?.content || '';
 
     if (!result.trim().startsWith('[')) {
-      console.warn("⚠️ GPT 응답 형식 오류:", result);
-      return res.status(500).json({ error: '응답이 JSON 배열 형식이 아님', result });
+      console.warn("⚠️ 응답이 JSON 배열이 아님:", result);
+      return res.status(500).json({ error: "응답 형식 오류", result });
     }
 
     let parsed;
@@ -84,36 +76,13 @@ ${questionSet[evaluation]}
       parsed = JSON.parse(result);
     } catch (e) {
       console.error("📛 JSON 파싱 오류:", e.message);
-      return res.status(500).json({ error: 'JSON 파싱 실패', result });
+      return res.status(500).json({ error: "JSON 파싱 실패", result });
     }
 
     return res.status(200).json({ question: parsed });
 
   } catch (error) {
     console.error("🔥 GPT 호출 실패:", error.message);
-    return res.status(500).json({ error: 'GPT 호출 예외', message: error.message });
+    return res.status(500).json({ error: "GPT 호출 예외", message: error.message });
   }
-}
-return res.status(200).json({
-  question: [
-    {
-      question: "당신이 최근에 겪은 갈등 상황을 설명해보세요.",
-      type: "DT-q3",
-      tags: {
-        사고기능: "갈등조정",
-        주제: "학교생활",
-        정서: "중립"
-      }
-    }
-  ]
-});
-try {
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4-turbo",
-    messages: [{ role: "user", content: prompt }],
-  });
-  return NextResponse.json({ result: completion.choices[0].message.content });
-} catch (error) {
-  console.error("GPT 호출 에러:", error); // 👈 콘솔에서 확인 가능
-  return NextResponse.json({ error: "OpenAI 호출 실패", detail: error.message });
 }
