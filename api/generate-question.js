@@ -48,7 +48,7 @@ ${questionSet[evaluation]}
         'OpenAI-Project': OPENAI_PROJECT_ID, // 주석 풀었는지 확인!
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo',
+        model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
       }),
