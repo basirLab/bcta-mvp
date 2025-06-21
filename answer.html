@@ -1,36 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>BCTA 답변 및 평가</title>
+  <meta charset="UTF-8" />
+  <title>BCTA 질문 답변</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 40px;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      font-size: 1rem;
+      padding: 10px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 8px 16px;
+      font-size: 1rem;
+    }
+    .question-box {
+      border-left: 4px solid #4caf50;
+      padding-left: 16px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
   <h1>✏️ 질문에 답해주세요</h1>
 
-  <div id="questionDisplay" style="white-space: pre-wrap; font-size: 18px;"></div>
-  <textarea id="answerInput" rows="6" cols="60" placeholder="여기에 답변을 입력하세요..."></textarea><br><br>
+  <div class="question-box">
+    <p id="questionText">질문을 불러오는 중입니다...</p>
+  </div>
 
+  <textarea id="answerInput" placeholder="여기에 답변을 입력하세요..."></textarea>
+  <br />
   <button onclick="submitAnswer()">다음 질문</button>
 
   <script>
-    let currentIndex = 1;
-    const maxQuestions = 10; // 최대 질문 개수 (이후 자동으로 변경 가능)
-    const target = localStorage.getItem("target");
-    const evaluation = localStorage.getItem("evaluationType");
+    let questionIndex = 1;
+    let currentQuestion;
 
-    // 질문 표시
-    function loadQuestion(index) {
-      const questionKey = `question_${index}`;
-      const q = localStorage.getItem(questionKey);
-      if (q) {
-        const parsed = JSON.parse(q);
-        document.getElementById("questionDisplay").textContent = `${index}. ${parsed.question}`;
-      } else {
-        document.getElementById("questionDisplay").textContent = `질문을 불러오는 중입니다...`;
+    window.onload = function () {
+      const stored = localStorage.getItem(`question_${questionIndex}`);
+      if (!stored) {
+        document.getElementById("questionText").textContent = "❌ 질문을 불러올 수 없습니다.";
+        return;
       }
-    }
 
-    // 답변 제출
+      try {
+        const parsed = JSON.parse(stored);
+        currentQuestion = parsed[0]; // 배열에서 첫 질문 꺼냄
+        document.getElementById("questionText").textContent = currentQuestion.question;
+      } catch (e) {
+        document.getElementById("questionText").textContent = "📛 JSON 파싱 오류";
+      }
+    };
+
     async function submitAnswer() {
       const answer = document.getElementById("answerInput").value.trim();
       if (!answer) {
@@ -38,64 +64,29 @@
         return;
       }
 
-      // 저장
-      localStorage.setItem(`answer_${currentIndex}`, answer);
+      // 저장 or 서버 전송도 가능
+      localStorage.setItem(`answer_${questionIndex}`, answer);
 
-      // 백그라운드 평가 요청 (점수만 반환)
-      fetch('/api/evaluate-answer', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          question: JSON.parse(localStorage.getItem(`question_${currentIndex}`)).question,
-          answer: answer,
-          evaluation: evaluation
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        localStorage.setItem(`score_${currentIndex}`, JSON.stringify(data.scores));
-      });
+      // 다음 질문으로 이동 (예시: question_2로 넘어가기)
+      questionIndex++;
 
-      currentIndex++;
+      const next = localStorage.getItem(`question_${questionIndex}`);
+      if (!next) {
+        alert("모든 질문이 완료되었습니다.");
+        window.location.href = "result.html"; // 또는 리포트로 이동
+        return;
+      }
 
-      // 다음 질문 있으면 로딩, 없으면 총평으로 이동
-      if (localStorage.getItem(`question_${currentIndex}`)) {
-        loadQuestion(currentIndex);
+      // 다음 질문 로드
+      try {
+        const parsed = JSON.parse(next);
+        currentQuestion = parsed[0];
+        document.getElementById("questionText").textContent = currentQuestion.question;
         document.getElementById("answerInput").value = "";
-      } else {
-        // 총평으로 이동
-        localStorage.setItem("summary_ready", true);
-        window.location.href = "summary.html";
+      } catch (e) {
+        alert("다음 질문 로딩 실패");
       }
     }
-
-    // 질문 2~n 미리 백그라운드 로딩
-    async function preloadQuestions(startIndex) {
-      for (let i = startIndex; i <= maxQuestions; i++) {
-        const key = `question_${i}`;
-        if (!localStorage.getItem(key)) {
-          const res = await fetch('/api/generate-question', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              target: target,
-              evaluation: evaluation,
-              index: i
-            })
-          });
-          const data = await res.json();
-          if (data && data.question) {
-            localStorage.setItem(key, JSON.stringify(data.question));
-          }
-        }
-      }
-    }
-
-    // 초기 실행
-    window.onload = function() {
-      loadQuestion(currentIndex);
-      preloadQuestions(2);
-    };
   </script>
 </body>
 </html>
