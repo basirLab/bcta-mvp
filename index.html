@@ -26,38 +26,44 @@
 
   <button onclick="startTest()">시작하기</button>
 
-  <script>
-    async function startTest() {
-      const target = document.getElementById("target").value;
-      const evaluation = document.getElementById("evaluation").value;
+<script>
+  async function startTest() {
+    const target = document.getElementById("target").value;
+    const evaluation = document.getElementById("evaluation").value;
 
-      // 선택 정보 저장
-      localStorage.setItem("target", target);
-      localStorage.setItem("evaluationType", evaluation);
-
-      // 첫 질문만 요청
-      const res = await fetch('/api/generate-question', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          target: target,
-          evaluation: evaluation,
-          index: 1
-        })
-      });
-
-      const data = await res.json();
-      if (!data || !data.question) {
-        alert("질문 생성 실패. 다시 시도해주세요.");
-        return;
+    // ✅ 기존 질문 및 답변 초기화
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("question_") || key.startsWith("answer_") || key === "currentIndex") {
+        localStorage.removeItem(key);
       }
+    });
 
-      // 질문 저장
-      localStorage.setItem("question_1", JSON.stringify(data.question));
+    localStorage.setItem("target", target);
+    localStorage.setItem("evaluationType", evaluation);
 
-      // 평가 시작 페이지로 이동
-      window.location.href = "answer.html";
+    // ✅ 질문 생성 요청
+    const res = await fetch('/api/generate-question', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, evaluation })
+    });
+
+    const data = await res.json();
+    if (!data || !data.questions || data.questions.length === 0) {
+      alert("질문 생성 실패. 다시 시도해주세요.");
+      return;
     }
-  </script>
+
+    // ✅ 새 질문 저장
+    data.questions.forEach((q, idx) => {
+      localStorage.setItem(`question_${idx + 1}`, JSON.stringify([q]));
+    });
+
+    localStorage.setItem("currentIndex", 1); // 처음부터 시작
+
+    // ✅ 평가 페이지로 이동
+    window.location.href = "answer.html";
+  }
+</script>
 </body>
 </html>
