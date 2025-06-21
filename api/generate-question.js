@@ -1,44 +1,57 @@
-export default async function handler(req, res) {More actions
+export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
 
   const questionSet = {
-    CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
-    AT: `- AT-q1 주장 생성형: 2개\n- AT-q2 논거 정당화형: 2개\n- AT-q3 반박 설계형: 1개\n- AT-q4 입장 전환형: 1개\n- AT-q5 감정 절제형: 1개\n- AT-q6 일관성 검토형: 2개`,
-    QT: `- QT-q1 사실 질문형: 2개\n- QT-q2 예측 질문형: 2개\n- QT-q3 대안 탐색형: 2개\n- QT-q4 가정 기반 질문형: 2개\n- QT-q5 창의적 확장 질문형: 2개`
+    CT: {
+      list: [
+        { type: "판단", count: 1 },
+        { type: "인과분석", count: 2 },
+        { type: "비교대조", count: 1 },
+        { type: "추론확장", count: 2 },
+        { type: "사례적용", count: 1 },
+        { type: "자기조절", count: 2 }
+      ]
+    }
+    // AT, QT 등은 필요 시 추가 가능
   };
 
-  const prompt = `
-다음은 "${target}"이라는 주제에 대해 ${evaluation} 유형의 질문을 생성하는 요청입니다.
-다음 규칙에 따라 JSON 형식의 질문들을 생성해 주세요:
+  const totalCount = questionSet[evaluation].list.reduce((sum, item) => sum + item.count, 0);
+  const countInfo = questionSet[evaluation].list.map(i => `- ${i.type}: ${i.count}개`).join("\n");
 
-[출력 형식 예시]
+  const prompt = `
+다음은 "${target}" 학습자를 위한 **비판적 사고 평가(Critical Thinking) 질문** 생성 요청입니다.
+이 요청은 학습자의 인지적 사고 역량을 평가할 목적으로 구성됩니다.
+
+🧠 질문 목표
+- 평가 유형: ${evaluation}
+- 사고 기능: 판단, 인과분석, 비교대조, 추론확장, 사례적용, 자기조절
+- 주제: 사회, 기술, 환경, 감정, 윤리, 인간관계 등
+- 정서: 공감, 갈등, 비판, 호기심, 책임감, 혼란 등 유도 가능
+
+🧾 생성 조건
+- 총 ${totalCount}개의 질문을 생성해주세요.
+${countInfo}
+
+💡 출력 예시 형식 (JSON 배열로)
 [
   {
-    "question": "당신은 왜 그 선택을 했나요?",
+    "question": "1/${totalCount}. 당신은 왜 그렇게 생각했나요?",
     "tags": {
-      "사고기능": "CT-q1 판단형",
-      "주제": "환경",
-      "정서": "중립"
+      "질문분류": "판단",
+      "사고기능": "추론",
+      "주제": "의사결정",
+      "정서": "책임감"
     }
-  }
+  },
+  ...
 ]
 
-[질문 조건]
-- 총 9문제 이상
-- 각 문제는 하나의 사고기능 유형(CT, AT, QT 등)에만 속해야 함
-- JSON 배열 형태로 출력
-- 질문은 한국어로 작성
-- 질문 내용은 대상 학습자의 나이(예: 초등학생, 중학생 등)에 맞게 쉽게 표현
-
-[질문 세트 유형 설명]
-${questionSet[evaluation]}
-
----
-
-이제 위 조건을 바탕으로 "${target}"에 대한 질문을 생성해 주세요.
+※ 질문은 반드시 **${target}의 이해 수준에 맞춰 쉽고 명확하게 작성**해주세요.
+※ 태그는 질문의 성격을 정확히 반영해야 합니다.
+※ 출력은 반드시 **JSON 배열** 형태여야 합니다.
 `;
 
   try {
@@ -57,33 +70,23 @@ ${questionSet[evaluation]}
     });
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content || "[]";
+    let raw = data.choices?.[0]?.message?.content || "[]";
+
+    // ```json 또는 ``` 제거
+    raw = raw.replace(/```json|```/g, '').trim();
 
     let parsed = [];
     try {
       parsed = JSON.parse(raw);
     } catch (e) {
-      console.error("OpenAI 응답 JSON 파싱 오류:", e);
+      console.error("OpenAI 응답 JSON 파싱 오류:", e, "\n원본문자:", raw);
       return res.status(200).json({ question: [] });
     }
-let raw = data.choices?.[0]?.message?.content || "[]";
-
-// 코드 블록 제거 (```json ... ```)
-raw = raw.replace(/```json|```/g, '').trim();
-
-let parsed = [];
-try {
-  parsed = JSON.parse(raw);
-} catch (e) {
-  console.error("OpenAI 응답 JSON 파싱 오류:", e, "\n원본문자:", raw);
-  return res.status(200).json({ question: [] });
-}
 
     res.status(200).json({ question: parsed });
-res.status(200).json({ question: parsed });
 
   } catch (error) {
-    console.error("질문 생성 오류:", error);
+    console.error("질문 생성 중 오류:", error);
     res.status(500).json({ error: "질문 생성 중 오류 발생" });
   }
 }
