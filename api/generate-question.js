@@ -23,16 +23,12 @@ export default async function handler(req, res) {
 절대 인사말, 설명, 마크다운, 줄바꿈, 문장 등은 포함하지 마십시오.  
 **오직 아래 JSON 형식만 출력하십시오.**
 
-출력 예시:
+출력 예시 형식:
 [
   {
-    "question": "플라스틱 사용을 줄이는 것이 왜 중요할까요?",
-    "type": "CT-q1",
-    "tags": {
-      "사고기능": "판단",
-      "주제": "환경",
-      "정서": "책임감"
-    }
+    "question": "(질문 내용)",
+    "type": "(예: CT-q1)",
+    "tags": ["사고기능", "주제", "정서"]
   }
 ]
 
@@ -53,9 +49,9 @@ ${questionSet[evaluation]}
         'OpenAI-Project': OPENAI_PROJECT_ID,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4-turbo',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
+        temperature: 1.0,
       }),
       signal: controller.signal,
     });
