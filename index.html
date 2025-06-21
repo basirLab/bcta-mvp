@@ -49,15 +49,14 @@
     });
 
     const data = await res.json();
-    if (!data || !data.questions || data.questions.length === 0) {
-      alert("질문 생성 실패. 다시 시도해주세요.");
-      return;
-    }
+if (!data || !data.question || data.question.length === 0) {
+  alert("질문 생성 실패. 다시 시도해주세요.");
+  return;
+}
 
-    // ✅ 새 질문 저장
-    data.questions.forEach((q, idx) => {
-      localStorage.setItem(`question_${idx + 1}`, JSON.stringify([q]));
-    });
+data.question.forEach((q, idx) => {
+  localStorage.setItem(`question_${idx + 1}`, JSON.stringify([q]));
+});
 
     localStorage.setItem("currentIndex", 1); // 처음부터 시작
 
