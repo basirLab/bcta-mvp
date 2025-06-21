@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
+  //const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
 
   const questionSet = {
     CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
