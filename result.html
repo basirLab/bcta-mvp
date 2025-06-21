@@ -10,7 +10,6 @@
       margin: 0;
       padding: 20px;
     }
-
     .container {
       max-width: 800px;
       margin: auto;
@@ -19,18 +18,15 @@
       border-radius: 15px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
     h2 {
       text-align: center;
       margin-bottom: 30px;
     }
-
     .loading {
       text-align: center;
       font-size: 18px;
       color: #666;
     }
-
     .spinner {
       margin: 20px auto;
       border: 6px solid #f3f3f3;
@@ -40,41 +36,22 @@
       height: 40px;
       animation: spin 1s linear infinite;
     }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     .result-block {
       margin-bottom: 40px;
     }
-
-    .question {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .answer {
-      margin-bottom: 10px;
-    }
-
     .score-table {
       border-collapse: collapse;
       width: 100%;
       margin-bottom: 10px;
     }
-
     .score-table th, .score-table td {
       border: 1px solid #ccc;
       padding: 8px 12px;
       text-align: left;
     }
-
     .score-table th {
       background-color: #f9f9f9;
     }
-
     .feedback {
       padding: 10px;
       background-color: #fef7d1;
@@ -95,60 +72,86 @@
 
   <script>
     async function loadEvaluation() {
-      const answers = JSON.parse(localStorage.getItem("userAnswers") || "[]");
-      const evaluationType = localStorage.getItem("evaluationType") || "CT";
+      const answers = [];
+      let totalScore = 0;
+      let totalMax = 0;
 
-      if (!answers.length) {
-        document.getElementById("loading").innerText = "답변이 없습니다.";
-        return;
+      let index = 1;
+      while (true) {
+        const q = localStorage.getItem(`question_${index}`);
+        const a = localStorage.getItem(`answer_${index}`);
+        const s = localStorage.getItem(`score_${index}`);
+        const f = localStorage.getItem(`feedback_${index}`);
+        if (!q || !a || !s) break;
+
+        const question = JSON.parse(q)[0].question;
+        const score = JSON.parse(s);
+        const sum = Object.values(score).reduce((acc, v) => acc + v, 0);
+        const max = Object.keys(score).length * 4;
+
+        totalScore += sum;
+        totalMax += max;
+
+        answers.push({
+          question,
+          answer: a,
+          scores: score,
+          feedback: f || ""
+        });
+
+        index++;
       }
 
-      const res = await fetch("/api/evaluate", {
+      renderResults(answers, totalScore, totalMax);
+
+      const summaryRes = await fetch("/api/generate-summary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, evaluationType })
+        body: JSON.stringify({
+          answers: answers.map(a => a.answer),
+          scores: answers.map(a => a.scores),
+          rubrics: {}
+        })
       });
 
-      const data = await res.json();
+      const summaryData = await summaryRes.json();
+      const summary = summaryData.result || "";
 
-      try {
-        const resultData = JSON.parse(data.result);
-        renderResults(resultData);
-      } catch (e) {
-        document.getElementById("loading").innerText = "GPT 응답 형식을 인식할 수 없습니다.";
-        console.error("응답 파싱 실패:", e);
-      }
+      const summaryBlock = document.createElement("div");
+      summaryBlock.innerHTML = `<h3>📘 총평</h3><p>${summary}</p>`;
+      document.getElementById("results").appendChild(summaryBlock);
     }
 
-    function renderResults(resultData) {
+    function renderResults(resultData, totalScore, totalMax) {
       document.getElementById("loading").style.display = "none";
-
       const resultsDiv = document.getElementById("results");
+
+      const totalBlock = document.createElement("div");
+      totalBlock.innerHTML = `<h3>총점: ${totalScore} / ${totalMax}</h3>`;
+      resultsDiv.appendChild(totalBlock);
 
       resultData.forEach((item, index) => {
         const block = document.createElement("div");
         block.className = "result-block";
 
-        block.innerHTML += `<div class="question">Q${index + 1}. ${item.question}</div>`;
-        block.innerHTML += `<div class="answer">🙋‍♂️ 내 답변: ${item.answer}</div>`;
+        block.innerHTML += `<div><strong>Q${index + 1}. ${item.question}</strong></div>`;
+        block.innerHTML += `<div>🙋‍♂️ 내 답변: ${item.answer}</div>`;
 
         const table = document.createElement("table");
         table.className = "score-table";
-
         const header = table.insertRow();
-        header.innerHTML = "<th>항목</th><th>점수</th><th>이유</th>";
+        header.innerHTML = "<th>항목</th><th>점수</th>";
 
         for (let key in item.scores) {
           const row = table.insertRow();
-          const reason = item.reasoning?.[key] || "-";
-          row.innerHTML = `<td>${key}</td><td>${item.scores[key]}</td><td>${reason}</td>`;
+          row.innerHTML = `<td>${key}</td><td>${item.scores[key]}</td>`;
         }
 
         block.appendChild(table);
 
         const feedback = document.createElement("div");
         feedback.className = "feedback";
-        feedback.innerText = `📌 총평: ${item.feedback}`;
+        feedback.innerText = `📌 피드백: ${item.feedback}`;
         block.appendChild(feedback);
 
         resultsDiv.appendChild(block);
