@@ -1,155 +1,101 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>BCTA 질문 응답</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f2f5;
-      margin: 0;
-      padding: 0;
-    }
-
-    .chat-box {
-      max-width: 700px;
-      margin: 40px auto;
-      background-color: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    .chat-bubble {
-      margin: 15px 0;
-      padding: 12px 16px;
-      border-radius: 10px;
-      line-height: 1.5;
-      font-size: 16px;
-      max-width: 80%;
-    }
-
-    .chat-bubble.question {
-      background-color: #e1f3ff;
-      text-align: left;
-    }
-
-    .chat-bubble.answer {
-      background-color: #fff3d4;
-      text-align: right;
-      margin-left: auto;
-    }
-
-    #inputBox {
-      display: flex;
-      margin-top: 20px;
-      gap: 10px;
-    }
-
-    #answer-input {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    #submit-btn {
-      padding: 10px 18px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    #submit-btn:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <title>BCTA 답변 및 평가</title>
 </head>
 <body>
-  <div class="chat-box" id="chat-container">
-    <h2>📝 질문에 답변해주세요</h2>
-  </div>
+  <h1>✏️ 질문에 답해주세요</h1>
 
-  <div id="inputBox" class="chat-box">
-    <input type="text" id="answer-input" placeholder="여기에 답변을 입력하세요" />
-    <button id="submit-btn">제출</button>
-  </div>
+  <div id="questionDisplay" style="white-space: pre-wrap; font-size: 18px;"></div>
+  <textarea id="answerInput" rows="6" cols="60" placeholder="여기에 답변을 입력하세요..."></textarea><br><br>
+
+  <button onclick="submitAnswer()">다음 질문</button>
 
   <script>
-    const chatContainer = document.getElementById('chat-container');
-    const answerInput = document.getElementById('answer-input');
-    const submitBtn = document.getElementById('submit-btn');
+    let currentIndex = 1;
+    const maxQuestions = 10; // 최대 질문 개수 (이후 자동으로 변경 가능)
+    const target = localStorage.getItem("target");
+    const evaluation = localStorage.getItem("evaluationType");
 
-    // 질문 불러오기
-    const storedQuestions = JSON.parse(localStorage.getItem("bcta_questions") || "[]");
-    
-    const questions = storedQuestions.map(q => ({
-      number: q.number || "",
-      code: q.code || "",
-      text: q.question || q.text || ""
-    }));
-
-    // 평가유형 (이전에 localStorage에 저장되어 있어야 함)
-    const evaluationType = localStorage.getItem("evaluationType") || "CT"; // fallback
-
-    let currentIndex = 0;
-    const userAnswers = [];
-
-    function showQuestion(index) {
-      const questionText = questions[index];
-      const bubble = document.createElement('div');
-      bubble.className = 'chat-bubble question';
-      bubble.innerText = questionText;
-      chatContainer.appendChild(bubble);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-      answerInput.focus();
+    // 질문 표시
+    function loadQuestion(index) {
+      const questionKey = `question_${index}`;
+      const q = localStorage.getItem(questionKey);
+      if (q) {
+        const parsed = JSON.parse(q);
+        document.getElementById("questionDisplay").textContent = `${index}. ${parsed.question}`;
+      } else {
+        document.getElementById("questionDisplay").textContent = `질문을 불러오는 중입니다...`;
+      }
     }
 
-    function submitAnswer() {
-      const answer = answerInput.value.trim();
-      if (answer === '') {
-        alert('답변을 입력해주세요.');
+    // 답변 제출
+    async function submitAnswer() {
+      const answer = document.getElementById("answerInput").value.trim();
+      if (!answer) {
+        alert("답변을 입력해주세요.");
         return;
       }
 
-      const bubble = document.createElement('div');
-      bubble.className = 'chat-bubble answer';
-      bubble.innerText = answer;
-      chatContainer.appendChild(bubble);
+      // 저장
+      localStorage.setItem(`answer_${currentIndex}`, answer);
 
-      userAnswers.push({
-        question: questions[currentIndex],
-        answer: answer
+      // 백그라운드 평가 요청 (점수만 반환)
+      fetch('/api/evaluate-answer', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          question: JSON.parse(localStorage.getItem(`question_${currentIndex}`)).question,
+          answer: answer,
+          evaluation: evaluation
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        localStorage.setItem(`score_${currentIndex}`, JSON.stringify(data.scores));
       });
 
       currentIndex++;
-      answerInput.value = '';
 
-      if (currentIndex < questions.length) {
-        setTimeout(() => {
-          showQuestion(currentIndex);
-        }, 500);
+      // 다음 질문 있으면 로딩, 없으면 총평으로 이동
+      if (localStorage.getItem(`question_${currentIndex}`)) {
+        loadQuestion(currentIndex);
+        document.getElementById("answerInput").value = "";
       } else {
-        // 저장 및 페이지 이동
-        localStorage.setItem('userAnswers', JSON.stringify(userAnswers));
-        localStorage.setItem('evaluationType', evaluationType);
-        window.location.href = 'result.html';
+        // 총평으로 이동
+        localStorage.setItem("summary_ready", true);
+        window.location.href = "summary.html";
       }
-
-      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    submitBtn.addEventListener('click', submitAnswer);
-    answerInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') submitAnswer();
-    });
+    // 질문 2~n 미리 백그라운드 로딩
+    async function preloadQuestions(startIndex) {
+      for (let i = startIndex; i <= maxQuestions; i++) {
+        const key = `question_${i}`;
+        if (!localStorage.getItem(key)) {
+          const res = await fetch('/api/generate-question', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              target: target,
+              evaluation: evaluation,
+              index: i
+            })
+          });
+          const data = await res.json();
+          if (data && data.question) {
+            localStorage.setItem(key, JSON.stringify(data.question));
+          }
+        }
+      }
+    }
 
-    // 시작 시 첫 질문 표시
-    showQuestion(currentIndex);
+    // 초기 실행
+    window.onload = function() {
+      loadQuestion(currentIndex);
+      preloadQuestions(2);
+    };
   </script>
 </body>
 </html>
