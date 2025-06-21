@@ -43,7 +43,7 @@
     let currentQuestion;
 
     window.onload = function () {
-      const stored = localStorage.getItem(`question_${questionIndex}`); // ✅ 백틱 사용
+      const stored = localStorage.getItem(`question_${questionIndex}`);
       if (!stored) {
         document.getElementById("questionText").textContent = "❌ 질문을 불러올 수 없습니다.";
         return;
@@ -55,15 +55,9 @@
 
         document.getElementById("questionText").textContent = currentQuestion.question;
 
-        // ✅ 태그 출력
-    //    const tags = currentQuestion.tags || {};
-  //      const tagInfo = `🧠 사고기능: ${tags["사고기능"] || "없음"} | 📚 주제: ${tags["주제"] || "없음"} | 💬 정서: ${tags["정서"] || "없음"}`;
-//        document.getElementById("tagInfo").textContent = tagInfo;
-        
-        // ✅ 태그 출력 (배열 기반)
-const tags = currentQuestion.tags || [];
-const tagInfo = `🧠 사고기능: ${tags[0] || "없음"} | 📚 주제: ${tags[1] || "없음"} | 💬 정서: ${tags[2] || "없음"}`;
-document.getElementById("tagInfo").textContent = tagInfo;
+        const tags = currentQuestion.tags || [];
+        const tagInfo = `🧠 사고기능: ${tags[0] || "없음"} | 📚 주제: ${tags[1] || "없음"} | 💬 정서: ${tags[2] || "없음"}`;
+        document.getElementById("tagInfo").textContent = tagInfo;
       } catch (e) {
         document.getElementById("questionText").textContent = "📛 JSON 파싱 오류";
       }
@@ -76,10 +70,37 @@ document.getElementById("tagInfo").textContent = tagInfo;
         return;
       }
 
-      // ✅ 답변 저장 (백틱 사용)
       localStorage.setItem(`answer_${questionIndex}`, answer);
 
-      // ✅ 다음 질문으로 이동
+      // 점수 평가
+      const res = await fetch("/api/evaluate-answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: currentQuestion.question,
+          answer,
+          evaluation: "CT"
+        })
+      });
+      const data = await res.json();
+      localStorage.setItem(`score_${questionIndex}`, JSON.stringify(data.scores));
+
+      // 피드백 요청
+      const feedbackRes = await fetch("/api/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `다음은 학생의 답변입니다.
+
+"${answer}"
+
+이 답변에 대해 간단한 피드백을 한 문장으로 주세요.`
+        })
+      });
+      const feedbackData = await feedbackRes.json();
+      localStorage.setItem(`feedback_${questionIndex}`, feedbackData.result || "");
+
+      // 다음 질문 이동
       questionIndex++;
       const next = localStorage.getItem(`question_${questionIndex}`);
       if (!next) {
@@ -94,10 +115,9 @@ document.getElementById("tagInfo").textContent = tagInfo;
         document.getElementById("questionText").textContent = currentQuestion.question;
         document.getElementById("answerInput").value = "";
 
-        const tags = currentQuestion.tags || {};
-        const tagInfo = `🧠 사고기능: ${tags["사고기능"] || "없음"} | 📚 주제: ${tags["주제"] || "없음"} | 💬 정서: ${tags["정서"] || "없음"}`;
+        const tags = currentQuestion.tags || [];
+        const tagInfo = `🧠 사고기능: ${tags[0] || "없음"} | 📚 주제: ${tags[1] || "없음"} | 💬 정서: ${tags[2] || "없음"}`;
         document.getElementById("tagInfo").textContent = tagInfo;
-
       } catch (e) {
         alert("다음 질문 로딩 실패");
       }
