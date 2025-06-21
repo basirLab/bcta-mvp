@@ -1,3 +1,4 @@
+// pages/api/generate-questions.js
 export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
@@ -15,7 +16,6 @@ export default async function handler(req, res) {
         { type: "자기조절", count: 2 }
       ]
     }
-    // AT, QT 등은 필요 시 추가 가능
   };
 
   const totalCount = questionSet[evaluation].list.reduce((sum, item) => sum + item.count, 0);
@@ -49,7 +49,7 @@ ${countInfo}
   ...
 ]
 
-※ 질문은 반드시 **${target}의 이해 수준에 맞춰 친절하고 쉽우며 명확하게 작성**해주세요.
+※ 질문은 반드시 **${target}의 이해 수준에 맞춰 친절하고 쉽고 명확하게 작성**해주세요.
 ※ tag는 질문의 성격을 정확히 반영해야 합니다.
 ※ 출력은 반드시 **JSON 배열** 형태여야 합니다.
 `;
@@ -71,8 +71,6 @@ ${countInfo}
 
     const data = await response.json();
     let raw = data.choices?.[0]?.message?.content || "[]";
-
-    // ```json 또는 ``` 제거
     raw = raw.replace(/```json|```/g, '').trim();
 
     let parsed = [];
