@@ -1,3 +1,6 @@
+console.log("REQ BODY:", req.body);
+console.log("API KEY 존재 여부:", !!process.env.OPENAI_API_KEY);
+
 export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
