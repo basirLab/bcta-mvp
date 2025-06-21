@@ -14,26 +14,32 @@ export default async function handler(req, res) {
   const prompt = `
 당신은 교육 전문가이자 인지심리 기반 평가 설계 AI입니다.
 
-다음 조건에 따라 ${evaluation} 유형의 질문을 생성하고, 질문마다 자동으로 사고기능, 주제, 정서를 각각 태깅하세요.
+다음 조건에 따라 "${evaluation}" 유형의 질문을 생성하고, 질문마다 자동으로 아래 세 가지 태그를 지정하십시오:
 
-대상: ${target}
-질문유형 및 개수:
-${questionSet[evaluation]}
+- 사고기능
+- 주제
+- 정서
 
-반드시 아래의 JSON 형식만 출력하십시오. 그 외 설명은 절대 포함하지 마세요.
+절대 인사말, 설명, 마크다운, 줄바꿈, 문장 등은 포함하지 마십시오.  
+**오직 아래 JSON 형식만 출력하십시오.**
 
-출력 형식(JSON):
+출력 예시:
 [
   {
-    "question": "질문 내용",
-    "type": "코드",
+    "question": "플라스틱 사용을 줄이는 것이 왜 중요할까요?",
+    "type": "CT-q1",
     "tags": {
-      "주제": "예시",
-      "사고기능": "예시",
-      "정서": "예시"
+      "사고기능": "판단",
+      "주제": "환경",
+      "정서": "책임감"
     }
   }
-]`;
+]
+
+대상: ${target}  
+질문 유형 및 개수:  
+${questionSet[evaluation]}
+`;
 
   try {
     const controller = new AbortController();
@@ -44,14 +50,14 @@ ${questionSet[evaluation]}
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
-        'OpenAI-Project': OPENAI_PROJECT_ID, // 주석 풀었는지 확인!
+        'OpenAI-Project': OPENAI_PROJECT_ID,
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
       }),
-      signal: controller.signal
+      signal: controller.signal,
     });
 
     clearTimeout(timeout);
@@ -65,21 +71,20 @@ ${questionSet[evaluation]}
     const json = await response.json();
     const result = json.choices?.[0]?.message?.content || '';
 
-    if (!result.trim().startsWith('[')) {
-      console.warn("⚠️ 응답이 JSON 배열이 아님:", result);
-      return res.status(500).json({ error: "응답 형식 오류", result });
-    }
+    // 📌 GPT 응답이 JSON 외 텍스트를 포함할 경우 보정
+    const firstBracket = result.indexOf('[');
+    const lastBracket = result.lastIndexOf(']');
+    const jsonText = result.slice(firstBracket, lastBracket + 1);
 
     let parsed;
     try {
-      parsed = JSON.parse(result);
+      parsed = JSON.parse(jsonText);
     } catch (e) {
       console.error("📛 JSON 파싱 오류:", e.message);
       return res.status(500).json({ error: "JSON 파싱 실패", result });
     }
 
     return res.status(200).json({ question: parsed });
-
   } catch (error) {
     console.error("🔥 GPT 호출 실패:", error.message);
     return res.status(500).json({ error: "GPT 호출 예외", message: error.message });
