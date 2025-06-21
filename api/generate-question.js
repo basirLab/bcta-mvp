@@ -34,7 +34,7 @@ ${questionSet[evaluation]}
     }
   }
 ]
-`.trim();
+`;
 
   try {
     const controller = new AbortController();
