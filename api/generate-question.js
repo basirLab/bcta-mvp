@@ -87,19 +87,27 @@ ${questionSet[evaluation]}
   }
 }
 
+const json = await response.json();
+const result = json.choices?.[0]?.message?.content || '';
+
+// 📌 GPT 응답이 JSON 외 텍스트를 포함할 경우 보정
+const firstBracket = result.indexOf('[');
+const lastBracket = result.lastIndexOf(']');
+const jsonText = result.slice(firstBracket, lastBracket + 1);
+
 let parsed;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("📛 JSON 파싱 오류:", e.message);
-      return res.status(500).json({ error: "JSON 파싱 실패", result });
-    }
+try {
+  parsed = JSON.parse(jsonText);
 
-    // ✅ 페이지 정보 추가 (예: "1/7", "2/7", ...)
-    const total = parsed.length;
-    const withPageInfo = parsed.map((item, index) => ({
-      ...item,
-      pageInfo: `${index + 1} / ${total}`
-    }));
+  // ✅ 각 질문에 pageInfo 추가
+  parsed = parsed.map((q, idx) => ({
+    ...q,
+    pageInfo: `${idx + 1} / ${parsed.length}`
+  }));
 
-    return res.status(200).json({ question: withPageInfo });
+} catch (e) {
+  console.error("📛 JSON 파싱 오류:", e.message);
+  return res.status(500).json({ error: "JSON 파싱 실패", result });
+}
+
+return res.status(200).json({ question: parsed });
