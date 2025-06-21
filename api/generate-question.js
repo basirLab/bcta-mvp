@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 질문유형 및 개수:
 ${questionSet[evaluation]}
 
-반드시 JSON만 출력하세요. 설명 없이 [ 로 시작하는 배열로만 응답하세요.
+반드시 아래의 **JSON 배열만** 출력하세요. 'question'이라는 키에 넣지 말고 바로 배열로 출력하세요.
 
 출력 형식(JSON):
 [
@@ -34,7 +34,7 @@ ${questionSet[evaluation]}
     }
   }
 ]
-`;
+`.trim();
 
   try {
     const controller = new AbortController();
