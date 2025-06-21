@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
     AT: `- AT-q1 주장 생성형: 2개\n- AT-q2 논거 정당화형: 2개\n- AT-q3 반박 설계형: 1개\n- AT-q4 입장 전환형: 1개\n- AT-q5 감정 절제형: 1개\n- AT-q6 일관성 검토형: 2개`,
     QT: `- QT-q1 사실확인형: 1개\n- QT-q2 개념 연결형: 2개\n- QT-q3 가설 설정형: 1개\n- QT-q4 반대입장 유도형: 1개\n- QT-q5 자기성찰형: 2개`,
-    DT: `- DT-q1 대화 반응형: 2개\n- DT-q2 맥락 파악형: 2개\n- DT-q3 갈등 조정형: 1개\n- DT-q4 다자 전략형: 1개\n- DT-q5 질문 확장형: 2개`
+    DT: `- DT-q1 대화 반응형: 2개\n- DT-q2 맥락 파악형: 2개\n- DT-q3 갈등 조정형: 1개\n- DT-q4 다자 전략형: 1개\n- DT-q5 질문 확장형: 2개`,
   };
 
   const prompt = `
@@ -37,10 +37,16 @@ ${questionSet[evaluation]}
 `;
 
   try {
+    // 🔒 타임아웃 설정 (15초)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 15000);
+
     const apiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
         'OpenAI-Project': OPENAI_PROJECT_ID
       },
@@ -49,22 +55,37 @@ ${questionSet[evaluation]}
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3
       }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
+
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      console.error("❌ GPT 응답 에러:", apiRes.status, errText);
+      return res.status(500).json({ error: 'OpenAI 응답 실패', status: apiRes.status, message: errText });
+    }
 
     const json = await apiRes.json();
     const result = json.choices?.[0]?.message?.content || '';
 
-    // 파싱 안전하게 처리
     if (!result.trim().startsWith('[')) {
-      console.warn("⚠️ 응답이 JSON 형식이 아닙니다:", result);
-      return res.status(500).json({ error: 'OpenAI 응답 오류', result });
+      console.warn("⚠️ GPT 응답 형식 오류:", result);
+      return res.status(500).json({ error: '응답이 JSON 배열 형식이 아님', result });
     }
 
-    const parsed = JSON.parse(result);
-    res.status(200).json({ question: parsed });
+    let parsed;
+    try {
+      parsed = JSON.parse(result);
+    } catch (e) {
+      console.error("📛 JSON 파싱 오류:", e.message);
+      return res.status(500).json({ error: 'JSON 파싱 실패', result });
+    }
+
+    return res.status(200).json({ question: parsed });
 
   } catch (error) {
-    console.error("🔥 GPT 처리 중 에러 발생:", error);
-    res.status(500).json({ error: '서버 내부 오류', message: error.message });
+    console.error("🔥 GPT 호출 실패:", error.message);
+    return res.status(500).json({ error: 'GPT 호출 예외', message: error.message });
   }
 }
