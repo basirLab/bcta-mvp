@@ -59,15 +59,20 @@ ${questionSet[evaluation]}
     const data = await response.json();
     const raw = data.choices?.[0]?.message?.content || "[]";
 
-    let parsed = [];
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.error("OpenAI 응답 JSON 파싱 오류:", e);
-      return res.status(200).json({ question: [] });
-    }
+let raw = data.choices?.[0]?.message?.content || "[]";
 
-    res.status(200).json({ question: parsed });
+// 코드 블록 제거 (```json ... ```)
+raw = raw.replace(/```json|```/g, '').trim();
+
+let parsed = [];
+try {
+  parsed = JSON.parse(raw);
+} catch (e) {
+  console.error("OpenAI 응답 JSON 파싱 오류:", e, "\n원본문자:", raw);
+  return res.status(200).json({ question: [] });
+}
+
+res.status(200).json({ question: parsed });
 
   } catch (error) {
     console.error("질문 생성 오류:", error);
