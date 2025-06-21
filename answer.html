@@ -70,9 +70,10 @@
         return;
       }
 
+      // 답변 저장
       localStorage.setItem(`answer_${questionIndex}`, answer);
 
-      // 점수 평가
+      // 평가 요청
       const res = await fetch("/api/evaluate-answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,24 +84,14 @@
         })
       });
       const data = await res.json();
-      localStorage.setItem(`score_${questionIndex}`, JSON.stringify(data.scores));
 
-      // 피드백 요청
-      const feedbackRes = await fetch("/api/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `다음은 학생의 답변입니다.
+      if (data.scores) {
+        localStorage.setItem(`score_${questionIndex}`, JSON.stringify(data.scores));
+      } else {
+        alert("⚠️ 평가 실패 - 점수를 저장하지 못했습니다.");
+      }
 
-"${answer}"
-
-이 답변에 대해 간단한 피드백을 한 문장으로 주세요.`
-        })
-      });
-      const feedbackData = await feedbackRes.json();
-      localStorage.setItem(`feedback_${questionIndex}`, feedbackData.result || "");
-
-      // 다음 질문 이동
+      // 다음 질문으로 이동
       questionIndex++;
       const next = localStorage.getItem(`question_${questionIndex}`);
       if (!next) {
