@@ -2,11 +2,7 @@ export default async function handler(req, res) {
   const { evaluation, target } = req.body;
 
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-  // 👉 OpenAI-Project는 제거
-  if (!OPENAI_API_KEY) {
-    return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
-  }
+  const OPENAI_PROJECT_ID = process.env.OPENAI_PROJECT_ID;
 
   const questionSet = {
     CT: `- CT-q1 판단형: 1개\n- CT-q2 인과분석형: 2개\n- CT-q3 비교대조형: 1개\n- CT-q4 추론확장형: 2개\n- CT-q5 사례적용형: 1개\n- CT-q6 자기조절형: 2개`,
@@ -24,9 +20,9 @@ export default async function handler(req, res) {
 질문유형 및 개수:
 ${questionSet[evaluation]}
 
-JSON 형식만 출력해 주세요. \`\`\`json 태그 없이 순수 JSON만 주세요.
+오직 JSON만 출력하세요. 설명 없이 [ 로 시작하는 배열로만 응답하세요.
 
-출력 형식 예시:
+출력 형식(JSON):
 [
   {
     "question": "질문 내용",
@@ -45,7 +41,8 @@ JSON 형식만 출력해 주세요. \`\`\`json 태그 없이 순수 JSON만 주�
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'OpenAI-Project': OPENAI_PROJECT_ID
       },
       body: JSON.stringify({
         model: 'gpt-4-turbo',
@@ -55,23 +52,19 @@ JSON 형식만 출력해 주세요. \`\`\`json 태그 없이 순수 JSON만 주�
     });
 
     const json = await apiRes.json();
-
     const result = json.choices?.[0]?.message?.content || '';
 
-    let parsed;
-    try {
-      parsed = JSON.parse(result);
-    } catch (err) {
-      console.error('GPT 응답 파싱 오류:', err);
-      return res.status(500).json({
-        error: 'GPT 응답 JSON 파싱 실패',
-        raw: result
-      });
+    // 파싱 안전하게 처리
+    if (!result.trim().startsWith('[')) {
+      console.warn("⚠️ 응답이 JSON 형식이 아닙니다:", result);
+      return res.status(500).json({ error: 'OpenAI 응답 오류', result });
     }
 
-    return res.status(200).json({ question: parsed });
+    const parsed = JSON.parse(result);
+    res.status(200).json({ question: parsed });
+
   } catch (error) {
-    console.error('API 호출 에러:', error);
-    return res.status(500).json({ error: 'OpenAI API 호출 실패', details: error.message });
+    console.error("🔥 GPT 처리 중 에러 발생:", error);
+    res.status(500).json({ error: '서버 내부 오류', message: error.message });
   }
 }
